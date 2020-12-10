@@ -1,10 +1,10 @@
 package ua.com.foxminded.charcounter.service;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import ua.com.foxminded.charcounter.formatter.Formatter;
 import ua.com.foxminded.charcounter.model.Cache;
-import ua.com.foxminded.charcounter.model.CacheFactory;
 
 public class CharCounter {
 
@@ -12,9 +12,9 @@ public class CharCounter {
     private Cache wordCache;
     private Formatter formatter;
 
-    public CharCounter(CacheFactory factory, Formatter formatter) {
-        this.textCache = factory.getCacheInstance();
-        this.wordCache = factory.getCacheInstance();
+    public CharCounter(Cache textCache, Cache wordCache, Formatter formatter) {
+        this.textCache = textCache;
+        this.wordCache = wordCache;
         this.formatter = formatter;
     }
 
@@ -42,74 +42,60 @@ public class CharCounter {
             throw new IllegalArgumentException("Empty text provided, text should contain something!");
         }
     }
-    
+
     private Map<String, Map<Character, Integer>> countWords(String text) {
         Map<String, Map<Character, Integer>> result = new LinkedHashMap<>();
-        Map<Character, Integer> parsedWord = new LinkedHashMap<>();
-        String[] words = text.split("\\b");
-
+        Map<Character, Integer> parsedWord;
+        String[] words = text.split("((?<=\\s+)|(?=\\s+))|(?=\\W\\p{Punct}|\\p{Punct}\\W)|(?<=\\W\\p{Punct}|\\p{Punct}\\W})");
+        
+        System.out.println(Arrays.toString(words));
+        
         for (String word: words) {
-            if (word.length() == 1) {
-                result.put(word, Map.of(text.charAt(0), 1));
-            } else if (wordCache.isCached(word)) {
-                System.out.println(word + " is cached!");
-                System.out.println("Before adding word from cache: " + result);
-                result = addCachedWord(word, result, wordCache.getFromCache(word));
-                System.out.println("After adding word from cache: " + result);
+            if (wordCache.isCached(word)) {
+                parsedWord = wordCache.getFromCache(word);
             } else {
-                System.out.println(word + " is not cached!");
-                parsedWord = calculate(word);
-                System.out.println("Parsed word: " + word + " Calculated: " + parsedWord);
+                parsedWord = countChars(word);
                 wordCache.cache(Map.of(word, parsedWord));
-                System.out.println("WordCache is: " + wordCache.getCache());
-                result.put(word, parsedWord);
             }
+            result = addWord(word, parsedWord, result);
         }
-        System.out.println("WordCount Result: " + result);
         return result;
     }
 
-    private Map<Character, Integer> calculate(String word) {
-        Map<Character, Integer> result = new LinkedHashMap<>();
-        char[] chars = word.toCharArray();
-        System.out.println("Calculate this: " + word);
-        for (char ch: chars) {
-            result.merge(ch, 1, (a, b) -> (a + b));
-            System.out.println("Calculated chars: " + result);
+    private Map<String, Map<Character, Integer>> addWord(String word, Map<Character, Integer> parsed, Map<String, Map<Character, Integer>> initial) {
+        Map<String, Map<Character, Integer>> result = new LinkedHashMap<>(initial);
+        Map<Character, Integer> intermediate = new LinkedHashMap<>();
+        
+        if (result.containsKey(word)) {
+            for (Map.Entry<Character, Integer> entry: parsed.entrySet()) {
+                Character key = entry.getKey();
+                intermediate.put(key, result.get(word).get(key) + entry.getValue());
+            }
+            result.put(word, intermediate); 
+        } else {
+            result.put(word, parsed);
         }
-        System.out.println("Total chars result: " + result);
         return result;
     }
     
-    private Map<String, Map<Character, Integer>> addCachedWord(String word, Map<String, Map<Character, Integer>> target, Map<Character, Integer> cachedWord) {
-        Map<String, Map<Character, Integer>> result = target;
-        System.out.println("Cached word: " + cachedWord);
-        if (result.containsKey(word)) {
-            for (Map.Entry<Character, Integer> entry: cachedWord.entrySet()) {
-                System.out.println("Entry: " + entry);
-                result.get(word).merge(entry.getKey(), entry.getValue(), (a, b) -> (a + b));
-            }
-        } else {
-            result.put(word, cachedWord);
+    private Map<Character, Integer> countChars(String word) {
+        Map<Character, Integer> result = new LinkedHashMap<>();
+        char[] chars = word.toCharArray();
+
+        for (char ch: chars) {
+            result.merge(ch, 1, (oldValue, newValue) -> (oldValue + newValue));
         }
         return result;
     }
 
-    private Map<String, Map<Character, Integer>> mergeCalculations(String string, Map<String, Map<Character, Integer>> toMerge) {
-        System.out.println("To Merge: " + toMerge);
+    private Map<String, Map<Character, Integer>> mergeCalculations(String string,
+                Map<String, Map<Character, Integer>> toMerge) {
         Map<String, Map<Character, Integer>> result = new LinkedHashMap<>();
         Map<Character, Integer> subResult = new LinkedHashMap<>();
 
-        for (Map.Entry<String, Map<Character, Integer>> entry: toMerge.entrySet()) {
-            for (Map.Entry<Character, Integer> subEntry: entry.getValue().entrySet()) {
-                Character key = subEntry.getKey();
-                System.out.println("Key is " + key);
-                subResult.merge(key, subEntry.getValue(), (a, b) -> (a + b));
-                System.out.println("Subresult: " + subResult);
-            }
-        }
+        toMerge.forEach((key, value) -> value.forEach((key1, value1) ->
+                subResult.merge(key1, value1, (oldValue, newValue) -> (oldValue + newValue))));
         result.put(string, subResult);
-        System.out.println("Merge result: " + result);
         return result;
     }
 }

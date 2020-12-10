@@ -5,21 +5,21 @@ import java.util.StringJoiner;
 
 public class EntryFormatter implements Formatter {
 
-    public static final String NL = System.lineSeparator();
+    private static final String NL = System.lineSeparator();
 
     @Override
     public String format(Map<String, Map<Character, Integer>> entries) {
         StringJoiner joiner = new StringJoiner("");
 
-        for (String key: entries.keySet()) {
-            joiner.add(key);
-            for (Map.Entry<Character, Integer> entry: entries.get(key).entrySet()) {
+        for (Map.Entry<String, Map<Character, Integer>> entry: entries.entrySet()) {
+            joiner.add(entry.getKey());
+            entry.getValue().forEach( (key, value) -> {
                 joiner.add(NL);
                 joiner.add("\"");
-                joiner.add(entry.getKey().toString());
+                joiner.add(key.toString());
                 joiner.add("\" - ");
-                joiner.add(entry.getValue().toString());
-            }
+                joiner.add(value.toString());
+            });
             joiner.add(NL);
         }
         return joiner.toString();

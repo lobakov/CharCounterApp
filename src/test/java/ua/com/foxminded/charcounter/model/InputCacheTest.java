@@ -3,13 +3,17 @@ package ua.com.foxminded.charcounter.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.StringJoiner;
 import org.junit.jupiter.api.Test;
+import ua.com.foxminded.charcounter.formatter.EntryFormatter;
+import ua.com.foxminded.charcounter.formatter.Formatter;
 import ua.com.foxminded.charcounter.service.CharCounter;
 
 public class InputCacheTest {
 
     private static final String NL = System.lineSeparator();
-    private InputCache cache = new InputCache();
-    private CharCounter charCounter = new CharCounter(cache);
+    private Cache textCache = new InputCache();
+    private Cache wordCache = new InputCache();
+    private Formatter formatter = new EntryFormatter();
+    private CharCounter charCounter = new CharCounter(textCache, wordCache, formatter);
 
     @Test
     void shouldMaintainCacheProperlyWhenGivenMultipleStrings() {
@@ -100,11 +104,11 @@ public class InputCacheTest {
         expected.add("\"d\" - 1");
         expected.add("\"!\" - 1");
         expected.add("");
-        
+
         for (String input: testInput) {
             charCounter.count(input);
         }
-        
-        assertEquals(expected.toString(), cache.toString());
+
+        assertEquals(expected.toString(), formatter.format(textCache.getCache()));
     }
 }
