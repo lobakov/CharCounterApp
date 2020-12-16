@@ -14,8 +14,7 @@ public class CharCounterApp {
         Cache wordCache = new InputCache();
         Formatter formatter = new EntryFormatter();
         CharCounter charCounter = new CharCounter(textCache, wordCache, formatter);
-        System.out.println(charCounter.count(input));
-        //System.out.println(formatter.format(textCache.getCache()));
-        //System.out.println(formatter.format(wordCache.getCache()));
+        String result = charCounter.count(input);
+        System.out.println(result);
     }
 }

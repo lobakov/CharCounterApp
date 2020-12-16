@@ -13,6 +13,7 @@ import ua.com.foxminded.charcounter.model.InputCache;
 public class CharCounterTest {
 
     private static final String NL = System.lineSeparator();
+
     private Cache textCache = new InputCache();
     private Cache wordCache = new InputCache();
     private Formatter formatter = new EntryFormatter();
@@ -42,18 +43,20 @@ public class CharCounterTest {
     void shouldReturnProperCalculationsWhenStringOfSingleChar() {
         String input = "l";
 
-        String expected = input + NL + "\"l\" - 1" + NL;
+        String expected = input + NL + "\"l\" - 1";
+        String actual = charCounter.count(input);
 
-        assertEquals(expected, charCounter.count(input));
+        assertEquals(expected, actual);
     }
 
     @Test
     void shouldReturnProperCalculationsWhenStringOfRepeatedChar() {
         String input = "lllll";
 
-        String expected = input + NL + "\"l\" - 5" + NL;
+        String expected = input + NL + "\"l\" - 5";
+        String actual = charCounter.count(input);
 
-        assertEquals(expected, charCounter.count(input));
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -71,8 +74,30 @@ public class CharCounterTest {
         expected.add("\"r\" - 1");
         expected.add("\"d\" - 1");
         expected.add("\"!\" - 1");
-        expected.add("");
 
-        assertEquals(expected.toString(), charCounter.count(input));
+        String actual = charCounter.count(input);
+
+        assertEquals(expected.toString(), actual);
+    }
+
+    @Test
+    void shouldReturnProperCalculationsWhenStringConsistOfRepeatableWords() {
+        String input = "hello world! hello world world hello";
+
+        StringJoiner expected = new StringJoiner(NL);
+        expected.add(input);
+        expected.add("\"h\" - 3");
+        expected.add("\"e\" - 3");
+        expected.add("\"l\" - 9");
+        expected.add("\"o\" - 6");
+        expected.add("\" \" - 5");
+        expected.add("\"w\" - 3");
+        expected.add("\"r\" - 3");
+        expected.add("\"d\" - 3");
+        expected.add("\"!\" - 1");
+
+        String actual = charCounter.count(input);
+
+        assertEquals(expected.toString(), actual);
     }
 }

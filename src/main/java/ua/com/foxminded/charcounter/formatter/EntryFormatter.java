@@ -1,6 +1,8 @@
 package ua.com.foxminded.charcounter.formatter;
 
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.StringJoiner;
 
 public class EntryFormatter implements Formatter {
@@ -10,8 +12,10 @@ public class EntryFormatter implements Formatter {
     @Override
     public String format(Map<String, Map<Character, Integer>> entries) {
         StringJoiner joiner = new StringJoiner("");
+        Iterator<Entry<String, Map<Character, Integer>>> iterator = entries.entrySet().iterator();
 
-        for (Map.Entry<String, Map<Character, Integer>> entry: entries.entrySet()) {
+        while (iterator.hasNext()) {
+            Map.Entry<String, Map<Character, Integer>> entry = iterator.next();
             joiner.add(entry.getKey());
             entry.getValue().forEach( (key, value) -> {
                 joiner.add(NL);
@@ -20,7 +24,10 @@ public class EntryFormatter implements Formatter {
                 joiner.add("\" - ");
                 joiner.add(value.toString());
             });
-            joiner.add(NL);
+
+            if (iterator.hasNext()) {
+                joiner.add(NL);
+            }
         }
         return joiner.toString();
     }

@@ -1,12 +1,14 @@
 package ua.com.foxminded.charcounter.service;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import ua.com.foxminded.charcounter.formatter.Formatter;
 import ua.com.foxminded.charcounter.model.Cache;
 
 public class CharCounter {
+
+    private static final String DELIMITER =
+            "((?<=\\s+)|(?=\\s+))|(?=\\W\\p{Punct}|\\p{Punct}\\W)|(?<=\\W\\p{Punct}|\\p{Punct}\\W})";
 
     private Cache textCache;
     private Cache wordCache;
@@ -46,10 +48,8 @@ public class CharCounter {
     private Map<String, Map<Character, Integer>> countWords(String text) {
         Map<String, Map<Character, Integer>> result = new LinkedHashMap<>();
         Map<Character, Integer> parsedWord;
-        String[] words = text.split("((?<=\\s+)|(?=\\s+))|(?=\\W\\p{Punct}|\\p{Punct}\\W)|(?<=\\W\\p{Punct}|\\p{Punct}\\W})");
-        
-        System.out.println(Arrays.toString(words));
-        
+        String[] words = text.split(DELIMITER);
+
         for (String word: words) {
             if (wordCache.isCached(word)) {
                 parsedWord = wordCache.getFromCache(word);
@@ -62,10 +62,12 @@ public class CharCounter {
         return result;
     }
 
-    private Map<String, Map<Character, Integer>> addWord(String word, Map<Character, Integer> parsed, Map<String, Map<Character, Integer>> initial) {
+    private Map<String, Map<Character, Integer>> addWord(String word, Map<Character, Integer> parsed,
+                Map<String, Map<Character, Integer>> initial) {
+
         Map<String, Map<Character, Integer>> result = new LinkedHashMap<>(initial);
         Map<Character, Integer> intermediate = new LinkedHashMap<>();
-        
+
         if (result.containsKey(word)) {
             for (Map.Entry<Character, Integer> entry: parsed.entrySet()) {
                 Character key = entry.getKey();
@@ -77,7 +79,7 @@ public class CharCounter {
         }
         return result;
     }
-    
+
     private Map<Character, Integer> countChars(String word) {
         Map<Character, Integer> result = new LinkedHashMap<>();
         char[] chars = word.toCharArray();
@@ -90,6 +92,7 @@ public class CharCounter {
 
     private Map<String, Map<Character, Integer>> mergeCalculations(String string,
                 Map<String, Map<Character, Integer>> toMerge) {
+
         Map<String, Map<Character, Integer>> result = new LinkedHashMap<>();
         Map<Character, Integer> subResult = new LinkedHashMap<>();
 
